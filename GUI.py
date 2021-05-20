@@ -4,6 +4,7 @@ import sys
 from hangman import *
 from tkinter import *
 from tkinter.filedialog import *
+from tkinter import simpledialog
 pygame.init()
 
 screen = pygame.display.set_mode([1280, 720])
@@ -20,6 +21,7 @@ red = (179, 36, 7)
 white = (255,255,255)
 green =(38, 156, 14)
 normal_red = (255, 0, 0)
+BG = (213, 221, 232)
 letter_font = pygame.font.SysFont(None, 80)
 title_font = pygame.font.SysFont(None, 200)
 option_font = pygame.font.SysFont(None, 60)
@@ -48,8 +50,8 @@ def word_enter():
     button = Button(root, text="Start",command = lambda: start(entry.get()))
 
 
-    label.pack(anchor='center')
-    entry.pack(anchor='center')
+    label.pack(anchor='n')
+    entry.pack(anchor='n')
     button.pack(anchor='center')
     root.mainloop()
 
@@ -150,7 +152,10 @@ def dictSelect():
     root.withdraw()
     name = dict_name=askopenfilename()
     root.destroy()
-    main_window(dict_name=name)
+    if name:
+        main_window(dict_name=name)
+    else:
+        main_menu()
 
 
 def loss_screen(game_obj):
@@ -208,8 +213,17 @@ def win_screen(game_obj):
 
         img = left_font.render("You Won!", True, green)
         screen.blit(img, (350, 50))
-        img = guessed_font.render(f"You guessed \"{game_obj.string}\" correctly", True, black)
-        screen.blit(img, (150, 230))
+
+        text = f"You guessed \"{game_obj.string}\" correctly"
+        img = guessed_font.render(text, True, black)
+        
+        location = img.get_rect(center = screen.get_rect().center)
+        location.move_ip(0,-100)
+        print(location)
+        screen.blit(img, location)
+
+
+
         back = pygame.Rect(530, 380, 155, 85)
         pygame.draw.rect(screen, black, back)
         pygame.draw.rect(screen, white, [535, 385, 145, 75])
@@ -234,37 +248,65 @@ def main_menu():
     while running:
         mx, my = pygame.mouse.get_pos()
 
-        screen.fill((255, 255, 255))
+        screen.fill(BG)
 
         img = git_font.render("Made By: github.com/AlexDavicenko", True, black)
         screen.blit(img, (10, 690))
-        img = title_font.render('HANGMAN', True, red)
 
+        img = title_font.render('HANGMAN', True, red)
         screen.blit(img, (250, 20))
 
 
-        optionSP = pygame.Rect(300,200,320,180)
-        optionMP = pygame.Rect(660,200,320,180)
-        optionSPd = pygame.draw.rect(screen, black, optionSP)
-        optionMPd = pygame.draw.rect(screen, black, optionMP)
-        optionSPw = pygame.draw.rect(screen, white, [305, 205, 310, 170])
-        optionMPw = pygame.draw.rect(screen, white, [665, 205, 310, 170])
+        optionSP = pygame.Rect(0,0,320,150)
+        optionMP = pygame.Rect(0,0,320,150)
+        optionSPw = pygame.Rect(0,0,310,140)
+        optionMPw = pygame.Rect(0,0,310,140)
+
+        optionSP.center = (640,420)
+        optionMP.center = (640,240)
+        optionSPw.center = (640,420)
+        optionMPw.center = (640,240)  
+        
+
+        pygame.draw.rect(screen, black, optionSP)
+        pygame.draw.rect(screen, black, optionMP)
+        pygame.draw.rect(screen, BG, optionSPw)
+        pygame.draw.rect(screen, BG, optionMPw)
+
+
+
+
+
 
         SPcaption = option_font.render("Singleplayer", True, black)
-        screen.blit(SPcaption, (330, 255))
+        SPlocation = SPcaption.get_rect(center = screen.get_rect().center)
+        SPlocation.move_ip(0,60)
+        screen.blit(SPcaption, SPlocation)
+
         MPcaption = option_font.render("Multiplayer", True, black)
-        screen.blit(MPcaption, (710, 255))
+        MPlocation = MPcaption.get_rect(center = screen.get_rect().center)
+        MPlocation.move_ip(0,-120)
+        screen.blit(MPcaption, MPlocation)
+
 
         if optionSP.collidepoint((mx,my)):
-            optionSPw = pygame.draw.rect(screen, black, [305, 205, 310, 170])
-            SPcaption = option_font.render("Singleplayer", True, white)
-            screen.blit(SPcaption, (330, 255))
+            pygame.draw.rect(screen, black, optionSPw)
+            SPcaption = option_font.render("Singleplayer", True, BG)
+            SPlocation = SPcaption.get_rect(center = screen.get_rect().center)
+            SPlocation.move_ip(0,60)
+            screen.blit(SPcaption, SPlocation)
+            
+
+
         if optionMP.collidepoint((mx,my)):
-            optionMPw = pygame.draw.rect(screen, black, [665, 205, 310, 170])
-            MPcaption = option_font.render("Multiplayer", True, white)
-            screen.blit(MPcaption, (710, 255))
+            pygame.draw.rect(screen, black, optionMPw)
+            MPcaption = option_font.render("Multiplayer", True, BG)
+            MPlocation = MPcaption.get_rect(center = screen.get_rect().center)
+            MPlocation.move_ip(0,-120)
+            screen.blit(MPcaption, MPlocation)
 
 
+        
 
 
 
