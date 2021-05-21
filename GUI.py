@@ -1,10 +1,20 @@
-import pygame
+import os
+
+import web
+
+try:
+    import pygame
+except ImportError:
+    os.system('pip install pygame')
 import string
 import sys
+import webbrowser
+
+from web import *
 from hangman import *
 from tkinter import *
 from tkinter.filedialog import *
-import webbrowser
+
 
 LIGHT_GREY = (214, 195, 191)
 GREY = (122, 117, 116)
@@ -29,7 +39,8 @@ FONT_30 = pygame.font.SysFont(None, 30)
 
 screen = pygame.display.set_mode([1280, 720])
 pygame.display.set_caption('HANGMAN')
-
+icon = pygame.image.load("assets/Hangman.ico")
+pygame.display.set_icon(icon)
 
 def word_enter():
     showError = False
@@ -370,8 +381,18 @@ def win_screen(game_obj):
         pygame.display.update()
 
 
-def pull_words():
-    pass
+def add_dict():
+    root = Tk()
+    icon = PhotoImage("assets/Hangman.ico")
+    root.iconphoto(False, icon)
+    root.title("Add dictionary")
+
+    l1 = Label(root, text= "Input a vocabulary.com/lists URL")
+    l1.pack()
+    e1 = Entry(root, text="sheesh")
+    e1.pack()
+
+    root.mainloop()
 
 
 def main_menu():
@@ -474,7 +495,7 @@ def main_menu():
                 if optionMP.collidepoint((mx, my)):
                     word_enter()
                 if optionAD.collidepoint((mx, my)):
-                    pull_words()
+                    add_dict()
                 if gitlinkRect.collidepoint((mx, my)):
                     webbrowser.open('http://github.com/AlexDavicenko')
 
