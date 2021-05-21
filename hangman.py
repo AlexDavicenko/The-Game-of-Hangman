@@ -13,8 +13,21 @@ class Hangman:
             with open(dictionary, "r") as f:
                 words = f.read().split("\n")
                 random.shuffle(words)
-                self.string = words[0]
+                self.string = None
+                if len(words[0]) > 60:
+                    for i in words[1:]:
+                        if len(i) <= 60:
+                            self.string = words[0]
+                            break
+                    if not self.string:
+                        print("Invalid Dict")
+
+                else:
+                    self.string = words[0]
+
                 self.dis = "".join(["_" if i != " " and i.isalpha() else (i if i != " " else " ") for i in self.string])
+
+
         self.guessed = []
         self.guess_wrong = []
 
@@ -73,3 +86,4 @@ class Hangman:
         a = [i for i in self.string.lower() if i in list(string.ascii_lowercase) and i not in self.guessed]
         random.shuffle(a)
         self.checkLetter(a[0])
+        return a[0]

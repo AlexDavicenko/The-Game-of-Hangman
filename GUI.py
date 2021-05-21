@@ -4,40 +4,46 @@ import sys
 from hangman import *
 from tkinter import *
 from tkinter.filedialog import *
-from tkinter import simpledialog
+import webbrowser
+
+LIGHT_GREY = (214, 195, 191)
+GREY = (122, 117, 116)
+LIGHT_BLACK = (41, 36, 35)
+DARK_BLUE = (10, 7, 61)
+DARK_GREEN = (0, 28, 9)
+ORANGE_RED = (179, 36, 7)
+WHITE = (255, 255, 255)
+GREEN =(38, 156, 14)
+RED = (255, 0, 0)
+BG_COLOUR = (213, 221, 232)
+BLACK = (0,0,0)
 pygame.init()
+FONT_80 = pygame.font.SysFont(None, 80)
+FONT_200 = pygame.font.SysFont(None, 200)
+FONT_60 = pygame.font.SysFont(None, 60)
+FONT_70 = pygame.font.SysFont(None, 70)
+FONT_100 = pygame.font.SysFont(None, 100)
+FONT_180 = pygame.font.SysFont(None, 180)
+FONT_30 = pygame.font.SysFont(None, 30)
+
 
 screen = pygame.display.set_mode([1280, 720])
 pygame.display.set_caption('HANGMAN')
 
 
-#constants
-color1 = (214, 195, 191)
-grey = (122, 117, 116)
-black = (41, 36, 35)
-dark_blue = (10, 7, 61)
-dark_green = (0, 28, 9)
-red = (179, 36, 7)
-white = (255,255,255)
-green =(38, 156, 14)
-normal_red = (255, 0, 0)
-BG = (213, 221, 232)
-letter_font = pygame.font.SysFont(None, 80)
-title_font = pygame.font.SysFont(None, 200)
-option_font = pygame.font.SysFont(None, 60)
-guessed_font = pygame.font.SysFont(None, 70)
-guess_font = pygame.font.SysFont(None, 100)
-left_font = pygame.font.SysFont(None, 180)
-git_font = pygame.font.SysFont(None, 30)
-
 def word_enter():
     showError = False
     def start(text):
-        if all([True if i in Hangman.allowed else False for i in text]):
+        if len(text) >60:
+
+            label2.config(text="Too long")
+            label2.pack(anchor='center')
+            return False
+        if all([True if i in Hangman.allowed else False for i in text]) and any([True if i in string.ascii_letters else False for i in text]):
             root.destroy()
             main_window(text)
         else:
-            label2 = Label(root, text="Choose a different word")
+            label2.config(text="Choose a different word")
             label2.pack(anchor='center')
         
     root = Tk()
@@ -46,6 +52,7 @@ def word_enter():
     root.resizable(False, False)
 
     label = Label(root, text="Type a Word/Phrase")
+    label2 = Label(root)
     entry = Entry(root)
     button = Button(root, text="Start",command = lambda: start(entry.get()))
 
@@ -69,9 +76,9 @@ def main_window(text=None, dict_name = None):
                  [345, 405, 70, 70], [445, 405, 70, 70], [545, 405, 70, 70], [45, 505, 70, 70], [145, 505, 70, 70],
                  [245, 505, 70, 70], [345, 505, 70, 70], [445, 505, 70, 70], [545, 505, 70, 70], [45, 605, 70, 70],
                  [145, 605, 70, 70]]
-    textarr = [(60, 215), (160, 215), (260, 215), (360, 215), (460, 215), (560, 215), (60, 315), (160, 315), (260, 315),
+    textarr = [(60, 215), (160, 215), (260, 215), (360, 215), (460, 215), (560, 215), (60, 315), (160, 315), (270, 315),
                (360, 315), (460, 315), (560, 315), (60, 415), (160, 415), (260, 415), (360, 415), (460, 415),
-               (560, 415), (60, 515), (160, 515), (260, 515), (360, 515), (460, 515), (560, 515), (60, 615), (160, 615)]
+               (560, 415), (60, 515), (160, 515), (260, 515), (360, 515), (455, 515), (560, 515), (60, 615), (164, 615)]
     bounds = [[40, 200, 120, 280], [140, 200, 220, 280], [240, 200, 320, 280], [340, 200, 420, 280],
               [440, 200, 520, 280], [540, 200, 620, 280], [40, 300, 120, 380], [140, 300, 220, 380],
               [240, 300, 320, 380], [340, 300, 420, 380], [440, 300, 520, 380], [540, 300, 620, 380],
@@ -86,8 +93,10 @@ def main_window(text=None, dict_name = None):
         game = Hangman(string=text)
     else:
         game = Hangman(dictionary=dict_name)
-
+    hint_used = False
     while running:
+        mx, my = pygame.mouse.get_pos()
+
         if len(game.guess_wrong) >= 10:
             running = False
             loss_screen(game)
@@ -95,15 +104,73 @@ def main_window(text=None, dict_name = None):
         if game.check_win():
             running = False
             win_screen(game)
-        
+
+
+        curLetters = list(alphabet)
+
+        screen.fill(BG_COLOUR)
+
+        try:
+            image = pygame.image.load(f'assets/{len(game.guess_wrong)}.png')
+            screen.blit(image, (800,100))
+        except FileNotFoundError:
+            pass
+
+
+        if len(game.dis) <=30:
+            toGuess = FONT_70.render("".join(i + " " for i in game.dis), True, LIGHT_BLACK)
+            screen.blit(toGuess, (20, 20))
+        elif len(game.dis) >30 and len(game.dis) <=60:
+            if game.string[30]!=" " and game.string[29]!=" ":
+                msg = "".join(i + " " for i in game.dis[:30])+"-"
+            else:
+                msg = "".join(i + " " for i in game.dis[:30])
+            toGuess = FONT_70.render(msg, True, LIGHT_BLACK)
+            screen.blit(toGuess, (20, 20))
+
+            msg = "".join(i + " " for i in game.dis[30:])
+            toGuess = FONT_70.render(msg, True, LIGHT_BLACK)
+            screen.blit(toGuess, (20, 100))
+
+        left = FONT_180.render(str(10 - len(game.guess_wrong)), True, LIGHT_BLACK)
+        screen.blit(left, (1120, 580))
+
+        guessesLeft = FONT_80.render("Guesses Left:", True, LIGHT_BLACK)
+        screen.blit(guessesLeft, (740, 620))
+
+        for i in range(len(greyarr)):
+            pygame.draw.rect(screen, GREY, greyarr[i])
+            pygame.draw.rect(screen, LIGHT_GREY, color1arr[i])
+            img = FONT_80.render(curLetters[0], True, LIGHT_BLACK)
+
+            curLetters.pop(0)
+            screen.blit(img, textarr[i])
+
+
+        if not hint_used:
+            hint = pygame.Rect([450,600,160,80])
+            pygame.draw.rect(screen, GREY, hint)
+            pygame.draw.rect(screen, LIGHT_GREY, [455,605,150,70])
+            img = FONT_70.render("HINT", True, BLACK)
+            screen.blit(img, (470,615))
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                mouse = pygame.mouse.get_pos()
+
+                if hint.collidepoint((mx,my)) and not hint_used:
+                    hint_used = True
+                    index = alphabet.find(game.hint())
+                    greyarr.pop(index)
+                    color1arr.pop(index)
+                    textarr.pop(index)
+                    bounds.pop(index)
+                    alphabet = alphabet[:index] + alphabet[index + 1:]
+
                 for index, bound in enumerate(bounds):
-                    if mouse[0] >= bound[0] and mouse[0] <= bound[2] and mouse[1] >= bound[1] and mouse[1] <= bound[3]:
+                    if mx >= bound[0] and mx <= bound[2] and my >= bound[1] and my <= bound[3]:
                         game.checkLetter(alphabet[index])
 
                         greyarr.pop(index)
@@ -116,34 +183,6 @@ def main_window(text=None, dict_name = None):
                 if event.key == pygame.K_ESCAPE:
                     main_menu()
 
-        curLetters = list(alphabet)
-
-        screen.fill(white)
-
-        try:
-            image = pygame.image.load(f'assets/{len(game.guess_wrong)}.png')
-            screen.blit(image, (800,100))
-        except FileNotFoundError:
-            pass
-
-
-        toGuess = guess_font.render("".join(i + " " for i in game.dis), True, black)
-        screen.blit(toGuess, (20, 20))
-
-        left = left_font.render(str(10 - len(game.guess_wrong)), True, black)
-        screen.blit(left, (1120, 580))
-
-        guessesLeft = letter_font.render("Guesses Left:", True, black)
-        screen.blit(guessesLeft, (740, 620))
-
-        for i in range(len(greyarr)):
-            pygame.draw.rect(screen, grey, greyarr[i])
-            pygame.draw.rect(screen, color1, color1arr[i])
-            img = letter_font.render(curLetters[0], True, black)
-
-            curLetters.pop(0)
-            screen.blit(img, textarr[i])
-
         pygame.display.update()
 
 
@@ -152,7 +191,7 @@ def dictSelect():
     root.withdraw()
     name = dict_name=askopenfilename()
     root.destroy()
-    if name:
+    if name and name != "()":
         main_window(dict_name=name)
     else:
         main_menu()
@@ -172,25 +211,73 @@ def loss_screen(game_obj):
                 if back.collidepoint((mx, my)):
                     running = False
                     main_menu()
-        screen.fill(white)
+        screen.fill(BG_COLOUR)
 
-        img = left_font.render("You Lost!", True, normal_red)
+        img = FONT_180.render("You Lost!", True, RED)
         screen.blit(img, (350,50))
 
-        img = guessed_font.render(f"The word was: {game_obj.string}", True, black)
-        screen.blit(img, (300, 230))
-        back = pygame.Rect(530, 380, 155, 85)
-        pygame.draw.rect(screen, black, back)
-        pygame.draw.rect(screen, white, [535, 385, 145, 75])
-        img = guess_font.render("Exit", True, black)
-        screen.blit(img, (540, 390))
+        text = "The word was:"
+        img = FONT_70.render(text, True, LIGHT_BLACK)
+        location = img.get_rect(center=screen.get_rect().center)
+        location.move_ip(0, -150)
+        screen.blit(img, location)
+
+
+        text = game_obj.string
+        if len(text) <=30:
+            img = FONT_70.render(text, True, LIGHT_BLACK)
+            location = img.get_rect(center=screen.get_rect().center)
+            location.move_ip(0, -100)
+            screen.blit(img, location)
+
+        elif len(text) >30 and len(text) <=60:
+            if text[30]!=" " and text[29]!=" ":
+                img = FONT_70.render(text[:30]+'-', True, LIGHT_BLACK)
+                location = img.get_rect(center=screen.get_rect().center)
+                location.move_ip(0, -100)
+                screen.blit(img, location)
+
+                img = FONT_70.render(text[30:], True, LIGHT_BLACK)
+                location = img.get_rect(center=screen.get_rect().center)
+                location.move_ip(0, -30)
+                screen.blit(img, location)
+            else:
+                img = FONT_70.render(text[:30], True, LIGHT_BLACK)
+                location = img.get_rect(center=screen.get_rect().center)
+                location.move_ip(0, -100)
+                screen.blit(img, location)
+
+                img = FONT_70.render(text[30:], True, LIGHT_BLACK)
+                location = img.get_rect(center=screen.get_rect().center)
+                location.move_ip(0, -30)
+                screen.blit(img, location)
+
+        back = pygame.Rect(0, 0, 300, 130)
+        back.center = (640, 550)
+        front = pygame.Rect(0, 0, 290, 120)
+        front.center = (640, 550)
+
+        pygame.draw.rect(screen, LIGHT_BLACK, back)
+        pygame.draw.rect(screen, BG_COLOUR, front)
+        ToMenu = FONT_100.render("To Menu", True, LIGHT_BLACK)
+        TMlocation = ToMenu.get_rect(center=screen.get_rect().center)
+        TMlocation.move_ip(0, 190)
+        screen.blit(ToMenu, TMlocation)
+
+        if back.collidepoint((mx, my)):
+            pygame.draw.rect(screen, LIGHT_BLACK, front)
+            ToMenu = FONT_100.render("To Menu", True, WHITE)
+            TMlocation = ToMenu.get_rect(center=screen.get_rect().center)
+            TMlocation.move_ip(0, 190)
+            screen.blit(ToMenu, TMlocation)
+
 
 
         image = pygame.image.load('assets/10.png')
-        screen.blit(image, (800,250))
+        screen.blit(image, (900,350))
         
-        img = option_font.render("R.I.P.", True, normal_red)
-        screen.blit(img, (900, 550))
+        img = FONT_60.render("R.I.P.", True, RED)
+        screen.blit(img, (1030, 665))
 
         pygame.display.update()
 
@@ -201,6 +288,67 @@ def win_screen(game_obj):
     while running:
         mx, my = pygame.mouse.get_pos()
 
+
+        screen.fill(BG_COLOUR)
+
+        img = FONT_180.render("You Won!", True, GREEN)
+        screen.blit(img, (350, 50))
+
+        img = FONT_70.render("Well done for guessing:", True, LIGHT_BLACK)
+        location = img.get_rect(center=screen.get_rect().center)
+        location.move_ip(0, -150)
+        screen.blit(img, location)
+
+        text = game_obj.string
+        if len(text) <= 30:
+            img = FONT_70.render(text, True, LIGHT_BLACK)
+            location = img.get_rect(center=screen.get_rect().center)
+            location.move_ip(0, -80)
+            screen.blit(img, location)
+
+        elif len(text) > 30 and len(text) <= 60:
+            if text[30] != " " and text[29] != " ":
+                img = FONT_70.render(text[:30] + '-', True, LIGHT_BLACK)
+                location = img.get_rect(center=screen.get_rect().center)
+                location.move_ip(0, -80)
+                screen.blit(img, location)
+
+                img = FONT_70.render(text[30:], True, LIGHT_BLACK)
+                location = img.get_rect(center=screen.get_rect().center)
+                location.move_ip(0, -30)
+                screen.blit(img, location)
+            else:
+                img = FONT_70.render(text[:30], True, LIGHT_BLACK)
+                location = img.get_rect(center=screen.get_rect().center)
+                location.move_ip(0, -80)
+                screen.blit(img, location)
+
+                img = FONT_70.render(text[30:], True, LIGHT_BLACK)
+                location = img.get_rect(center=screen.get_rect().center)
+                location.move_ip(0, -30)
+                screen.blit(img, location)
+
+
+        back = pygame.Rect(0, 0, 300, 130)
+        back.center = (640, 550)
+        front = pygame.Rect(0, 0, 290, 120)
+        front.center = (640, 550)
+
+        pygame.draw.rect(screen, LIGHT_BLACK, back)
+        pygame.draw.rect(screen, BG_COLOUR, front)
+        ToMenu = FONT_100.render("To Menu", True, LIGHT_BLACK)
+        TMlocation = ToMenu.get_rect(center=screen.get_rect().center)
+        TMlocation.move_ip(0, 190)
+        screen.blit(ToMenu, TMlocation)
+
+        if back.collidepoint((mx,my)):
+            pygame.draw.rect(screen, LIGHT_BLACK, front)
+            ToMenu = FONT_100.render("To Menu", True, WHITE)
+            TMlocation = ToMenu.get_rect(center = screen.get_rect().center)
+            TMlocation.move_ip(0,190)
+            screen.blit(ToMenu, TMlocation)
+
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
@@ -209,27 +357,6 @@ def win_screen(game_obj):
                 if back.collidepoint((mx, my)):
                     running = False
                     main_menu()
-        screen.fill(white)
-
-        img = left_font.render("You Won!", True, green)
-        screen.blit(img, (350, 50))
-
-        text = f"You guessed \"{game_obj.string}\" correctly"
-        img = guessed_font.render(text, True, black)
-        
-        location = img.get_rect(center = screen.get_rect().center)
-        location.move_ip(0,-100)
-        print(location)
-        screen.blit(img, location)
-
-
-
-        back = pygame.Rect(530, 380, 155, 85)
-        pygame.draw.rect(screen, black, back)
-        pygame.draw.rect(screen, white, [535, 385, 145, 75])
-        img = guess_font.render("Exit", True, black)
-        screen.blit(img, (540, 390))
-
         pygame.display.update()
 
     running = True
@@ -238,9 +365,13 @@ def win_screen(game_obj):
             if event.type == pygame.QUIT:
                 sys.exit()
                 running = False
-        screen.fill(white)
+        screen.fill(BG_COLOUR)
 
         pygame.display.update()
+
+
+def pull_words():
+    pass
 
 
 def main_menu():
@@ -248,62 +379,85 @@ def main_menu():
     while running:
         mx, my = pygame.mouse.get_pos()
 
-        screen.fill(BG)
+        screen.fill(BG_COLOUR)
 
-        img = git_font.render("Made By: github.com/AlexDavicenko", True, black)
-        screen.blit(img, (10, 690))
+        gitlink = FONT_30.render("Made By: github.com/AlexDavicenko", True, LIGHT_BLACK)
+        gitlinkRect = gitlink.get_rect()
+        gitlinkRect.move_ip(10, 690)
+        screen.blit(gitlink, (10, 690))
 
-        img = title_font.render('HANGMAN', True, red)
-        screen.blit(img, (250, 20))
-
+        title = FONT_200.render('HANGMAN', True, ORANGE_RED)
+        titleRect = title.get_rect()
+        titleRect.move_ip(250, 20)
+        if titleRect.collidepoint((mx,my)):
+            title = FONT_200.render('HANGMAN', True, RED)
+        screen.blit(title, (250, 20))
 
         optionSP = pygame.Rect(0,0,320,150)
         optionMP = pygame.Rect(0,0,320,150)
+        optionAD = pygame.Rect(0,0,320,150)
+
         optionSPw = pygame.Rect(0,0,310,140)
         optionMPw = pygame.Rect(0,0,310,140)
+        optionADw = pygame.Rect(0,0,310,140)
 
-        optionSP.center = (640,420)
-        optionMP.center = (640,240)
-        optionSPw.center = (640,420)
-        optionMPw.center = (640,240)  
-        
+        optionSP.center = (640,240)
+        optionMP.center = (640,420)
+        optionAD.center = (640,600)
+        optionSPw.center = (640,240)
+        optionMPw.center = (640,420)
+        optionADw.center = (640,600)
 
-        pygame.draw.rect(screen, black, optionSP)
-        pygame.draw.rect(screen, black, optionMP)
-        pygame.draw.rect(screen, BG, optionSPw)
-        pygame.draw.rect(screen, BG, optionMPw)
+        pygame.draw.rect(screen, LIGHT_BLACK, optionSP)
+        pygame.draw.rect(screen, LIGHT_BLACK, optionMP)
+        pygame.draw.rect(screen, LIGHT_BLACK, optionAD)
+        pygame.draw.rect(screen, BG_COLOUR, optionSPw)
+        pygame.draw.rect(screen, BG_COLOUR, optionMPw)
+        pygame.draw.rect(screen, BG_COLOUR, optionADw)
 
 
 
 
 
-
-        SPcaption = option_font.render("Singleplayer", True, black)
+        SPcaption = FONT_60.render("Singleplayer", True, LIGHT_BLACK)
         SPlocation = SPcaption.get_rect(center = screen.get_rect().center)
-        SPlocation.move_ip(0,60)
+        SPlocation.move_ip(0,-120)
         screen.blit(SPcaption, SPlocation)
 
-        MPcaption = option_font.render("Multiplayer", True, black)
+        MPcaption = FONT_60.render("Multiplayer", True, LIGHT_BLACK)
         MPlocation = MPcaption.get_rect(center = screen.get_rect().center)
-        MPlocation.move_ip(0,-120)
+        MPlocation.move_ip(0,60)
         screen.blit(MPcaption, MPlocation)
+
+        ADcaption = FONT_60.render("Add Dictionary", True, LIGHT_BLACK)
+        ADlocation = ADcaption.get_rect(center=screen.get_rect().center)
+        ADlocation.move_ip(0, 240)
+        screen.blit(ADcaption, ADlocation)
 
 
         if optionSP.collidepoint((mx,my)):
-            pygame.draw.rect(screen, black, optionSPw)
-            SPcaption = option_font.render("Singleplayer", True, BG)
+            pygame.draw.rect(screen, LIGHT_BLACK, optionSPw)
+            SPcaption = FONT_60.render("Singleplayer", True, WHITE)
             SPlocation = SPcaption.get_rect(center = screen.get_rect().center)
-            SPlocation.move_ip(0,60)
+            SPlocation.move_ip(0,-120)
             screen.blit(SPcaption, SPlocation)
             
 
 
         if optionMP.collidepoint((mx,my)):
-            pygame.draw.rect(screen, black, optionMPw)
-            MPcaption = option_font.render("Multiplayer", True, BG)
+            pygame.draw.rect(screen, LIGHT_BLACK, optionMPw)
+            MPcaption = FONT_60.render("Multiplayer", True, WHITE)
             MPlocation = MPcaption.get_rect(center = screen.get_rect().center)
-            MPlocation.move_ip(0,-120)
+            MPlocation.move_ip(0,60)
             screen.blit(MPcaption, MPlocation)
+
+        if optionAD.collidepoint((mx,my)):
+            pygame.draw.rect(screen, LIGHT_BLACK, optionADw)
+            ADcaption = FONT_60.render("Add Dictionary", True, WHITE)
+            ADlocation = ADcaption.get_rect(center = screen.get_rect().center)
+            ADlocation.move_ip(0,240)
+            screen.blit(ADcaption, ADlocation)
+
 
 
         
@@ -319,6 +473,10 @@ def main_menu():
                     dictSelect()
                 if optionMP.collidepoint((mx, my)):
                     word_enter()
+                if optionAD.collidepoint((mx, my)):
+                    pull_words()
+                if gitlinkRect.collidepoint((mx, my)):
+                    webbrowser.open('http://github.com/AlexDavicenko')
 
         pygame.display.update()
 main_menu()
