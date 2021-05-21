@@ -384,14 +384,30 @@ def win_screen(game_obj):
 def add_dict():
     root = Tk()
     icon = PhotoImage("assets/Hangman.ico")
-    root.iconphoto(False, icon)
+    root.iconbitmap(False, icon)
+    root.wm_iconbitmap(bitmap = "assets/Hangman.ico")
     root.title("Add dictionary")
 
     l1 = Label(root, text= "Input a vocabulary.com/lists URL")
     l1.pack()
-    e1 = Entry(root, text="sheesh")
-    e1.pack()
 
+    e1 = Entry(root)
+    e1.pack()
+    e1.insert(0, 'Example: www.vocabulary.com/lists/111111')
+    e1.configure(state=DISABLED)
+    def on_click(event):
+        e1.configure(state=NORMAL)
+        e1.delete(0, END)
+
+        e1.unbind('<Button-1>', on_click_id)
+
+    on_click_id = e1.bind('<Button-1>', on_click)
+
+    def save(url):
+        if web.pull(url):
+            root.destroy()
+    b1 = Button(root, text ="Save", command=lambda: save(e1.get()))
+    b1.pack()
     root.mainloop()
 
 
